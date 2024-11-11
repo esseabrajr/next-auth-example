@@ -5,11 +5,12 @@ import Footer from "@/components/footer"
 import Header from "@/components/header"
 
 const inter = Inter({ subsets: ["latin"] })
+const API_URL = process.env.PRISMA_URL
 
 export const metadata: Metadata = {
-  title: "NextAuth.js Example",
+  title: "Novo Sistema Integrado",
   description:
-    "This is an example site to demonstrate how to use NextAuth.js for authentication",
+    "Novo sistema integrado para ferramentas de gestão do CMC",
 }
 
 export default function RootLayout({ children }: React.PropsWithChildren) {
@@ -17,8 +18,8 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
     <html lang="en">
       <body className={inter.className}>
         <div className="flex h-full min-h-screen w-full flex-col justify-between">
-          <Header />
-          <main className="mx-auto w-full max-w-3xl flex-auto px-4 py-4 sm:px-6 md:py-6">
+          <Header API_URL={API_URL}/>
+          <main className="w-full flex-auto px-4 py-4 sm:px-6 md:py-6">
             {children}
           </main>
           <Footer />

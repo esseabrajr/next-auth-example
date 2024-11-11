@@ -10,9 +10,18 @@ import {
 } from "./ui/dropdown-menu"
 import { SignIn, SignOut } from "./auth-components"
 
-export default async function UserButton() {
+const fetchUserData = async (user:string,API_URL:string) => {
+  const result = await fetch (`${API_URL}/user/${user}`);
+  const data = await result.json()
+  return (data)
+}
+
+export default async function UserButton({
+  API_URL
+}) {
   const session = await auth()
   if (!session?.user) return <SignIn />
+  const userData = await fetchUserData(session?.user.name,API_URL)
   return (
     <div className="flex items-center gap-2">
       <span className="hidden text-sm sm:inline-flex">
@@ -36,7 +45,7 @@ export default async function UserButton() {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
-                {session.user.name}
+              {userData.posto_grad.abreviatura} {userData.nome_guerra}
               </p>
               <p className="text-muted-foreground text-xs leading-none">
                 {session.user.email}

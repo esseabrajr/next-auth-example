@@ -1,5 +1,7 @@
 import NextAuth from "next-auth"
 import "next-auth/jwt"
+import CredentialsProvider from "next-auth/providers/credentials"
+import { md5 } from "js-md5";
 
 import Apple from "next-auth/providers/apple"
 // import Atlassian from "next-auth/providers/atlassian"
@@ -48,57 +50,52 @@ const storage = createStorage({
     : memoryDriver(),
 })
 
+const API_URL = process.env.PRISMA_URL
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   debug: !!process.env.AUTH_DEBUG,
   theme: { logo: "https://authjs.dev/img/logo-sm.png" },
   adapter: UnstorageAdapter(storage),
   providers: [
-    Apple,
-    // Atlassian,
-    Auth0,
-    AzureB2C,
-    BankIDNorway,
-    BoxyHQSAML({
-      clientId: "dummy",
-      clientSecret: "dummy",
-      issuer: process.env.AUTH_BOXYHQ_SAML_ISSUER,
-    }),
-    Cognito,
-    Coinbase,
-    Discord,
-    Dropbox,
-    Facebook,
-    GitHub,
-    GitLab,
-    Google,
-    Hubspot,
-    Keycloak({ name: "Keycloak (bob/bob)" }),
-    LinkedIn,
-    MicrosoftEntraId,
-    Netlify,
-    Okta,
-    Passkey({
-      formFields: {
-        email: {
-          label: "Username",
-          required: true,
-          autocomplete: "username webauthn",
+    CredentialsProvider({
+        name: "Novo Sistema Integrado",
+        credentials: {
+            username: {
+                label: "Usuário:",
+                type: "text",
+                placeholder: "Nome de usuário"
+            },
+            password: {
+                label: "Senha:",
+                type: "password",
+                placegolder: "Senha do sistema Integrado"
+            }
         },
-      },
-    }),
-    Passage,
-    Pinterest,
-    Reddit,
-    Salesforce,
-    Slack,
-    Spotify,
-    Twitch,
-    Twitter,
-    Vipps({
-      issuer: "https://apitest.vipps.no/access-management-1.0/access/",
-    }),
-    WorkOS({ connection: process.env.AUTH_WORKOS_CONNECTION! }),
-    Zoom,
+        async authorize(credentials) {
+
+            const fetchUsers = async (user) => {
+                const result = await fetch (`${API_URL}/key/${user}`);
+                const data = await result.json()
+                return (data)
+              }
+            const login = credentials?.username.replace(/\D/g, '') // Remove qualquer coisa que não seja número
+            .replace(/(\d{3})(\d)/, '$1.$2') // Adiciona ponto após o terceiro dígito
+            .replace(/(\d{3})(\d)/, '$1.$2') // Adiciona ponto após o sexto dígito
+            .replace(/(\d{3})(\d)/, '$1-$2') // Adiciona traço após o nono dígito
+            .replace(/(-\d{2})\d+?$/, '$1'); // Impede entrada de mais de 11 dígitos
+            const user = await fetchUsers(login)
+
+            //const user = users.find((line) => line.cpf === credentials?.username)
+
+            if (login === user.login && md5(credentials?.password) === user.senha) {
+                return {
+                    name: user.login
+                }
+            }else{
+                return null
+            }
+        }
+    })
   ],
   basePath: "/auth",
   session: { strategy: "jwt" },
